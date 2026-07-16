@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DDTank Server · Bugs & Melhorias</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+  :root{
+    --bg:#14110d;
+    --surface:#1e1a13;
+    --surface-2:#262019;
+    --surface-3:#2f2820;
+    --border:#3a3125;
+    --border-soft:#2c251c;
+    --text:#ece6da;
+    --muted:#9a8f7c;
+    --muted-2:#6f6656;
+    --gold:#e0a534;
+    --gold-hi:#f2bd52;
+    --bug:#d9605a;
+    --melhoria:#5b9bd6;
+    --green:#63b87d;
+    --amber:#e0a534;
+    --red:#d9605a;
+    --blue:#5b9bd6;
+    --radius:10px;
+    --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+    --sans:'Inter',system-ui,-apple-system,sans-serif;
+    --disp:'Space Grotesk','Inter',system-ui,sans-serif;
+  }
+
+  [data-theme="light"]{
+    --bg:#f6f4ef;
+    --surface:#ffffff;
+    --surface-2:#f2efe9;
+    --surface-3:#e9e5dc;
+    --border:#dcd6c9;
+    --border-soft:#e6e1d6;
+    --text:#2b261e;
+    --muted:#6f6759;
+    --muted-2:#a49c8a;
+    --gold:#b87f1a;
+    --gold-hi:#a06f14;
+    --green:#3f9960;
+    --amber:#b87f1a;
+    --red:#c14a44;
+    --blue:#3f77b0;
+    --bug:#c14a44;
+    --melhoria:#3f77b0;
+  }
+  [data-theme="light"] .btn.primary{color:#fff}
+  [data-theme="light"] ::selection{background:var(--gold);color:#fff}
+  [data-theme="light"] header{background:#faf8f4}
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  body{padding:0 0 80px}
+  button{font-family:inherit;cursor:pointer}
+  input,select,textarea{font-family:inherit}
+  ::selection{background:var(--gold);color:#14110d}
+
+  header{position:sticky;top:0;z-index:40;background:linear-gradient(180deg,#191510,#14110d);border-bottom:1px solid var(--border)}
+  [data-theme="light"] header{background:#faf8f4}
+  .head-inner{max-width:1180px;margin:0 auto;padding:16px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .brand{display:flex;align-items:baseline;gap:10px}
+  .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--gold);align-self:center}
+  .brand h1{font-family:var(--disp);font-weight:700;font-size:19px;letter-spacing:-.01em}
+  .brand span{font-family:var(--mono);font-size:11px;color:var(--muted-2);text-transform:uppercase;letter-spacing:.14em}
+  .head-actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+  .btn{border:1px solid var(--border);background:var(--surface-2);color:var(--text);padding:8px 14px;border-radius:8px;font-size:13px;font-weight:500;transition:all .12s;display:inline-flex;align-items:center;gap:7px}
+  .btn:hover{border-color:var(--muted-2);background:var(--surface-3)}
+  .btn.primary{background:var(--gold);border-color:var(--gold);color:#1a1409;font-weight:600}
+  .btn.primary:hover{background:var(--gold-hi);border-color:var(--gold-hi)}
+  .btn.ghost{background:transparent}
+  .btn.sm{padding:5px 10px;font-size:12px}
+  .btn.danger:hover{border-color:var(--red);color:var(--red)}
+
+  .needs-auth{display:none!important}
+  body.authed .needs-auth{display:inline-flex!important}
+  #userBox{display:none;align-items:center;gap:10px}
+  body.authed #userBox{display:flex}
+  #userBox .em{font-family:var(--mono);font-size:11px;color:var(--muted-2);max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .who-chip{font-family:var(--mono);font-size:11px;color:var(--gold);border:1px solid var(--border);background:var(--surface-2);padding:3px 10px;border-radius:20px;white-space:nowrap}
+
+  main{max-width:1180px;margin:0 auto;padding:24px;display:none}
+  body.authed main{display:block}
+
+  #gate{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--bg)}
+  body.authed #gate{display:none}
+  .gate-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:36px 32px;max-width:420px;width:100%;text-align:center}
+  .gate-card .gdot{width:11px;height:11px;border-radius:50%;background:var(--gold);margin:0 auto 18px}
+  .gate-card h2{font-family:var(--disp);font-size:22px;margin-bottom:8px}
+  .gate-card p{color:var(--muted);font-size:14px;margin-bottom:24px;line-height:1.55}
+  .who{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .who-b{justify-content:center;padding:13px}
+  .who-b[data-name="__other"]{grid-column:1 / -1;color:var(--muted)}
+  #otherWrap{display:none;gap:8px;margin-top:10px}
+  #otherWrap input{flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:14px}
+  #otherWrap input:focus{outline:none;border-color:var(--gold)}
+
+  .tabs{display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--border)}
+  .tab{background:none;border:none;color:var(--muted);padding:12px 20px;font-family:var(--disp);font-weight:600;font-size:15px;position:relative;transition:color .12s}
+  .tab:hover{color:var(--text)}
+  .tab.active{color:var(--text)}
+  .tab.active::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--gold)}
+  .tab .count{font-family:var(--mono);font-size:11px;color:var(--muted-2);margin-left:7px;font-weight:500}
+
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:20px}
+  .stat{background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--radius);padding:14px 16px}
+  .stat .n{font-family:var(--disp);font-size:26px;font-weight:700;line-height:1}
+  .stat .l{font-size:12px;color:var(--muted);margin-top:5px}
+  .stat.done .n{color:var(--green)}
+  .stat.pend .n{color:var(--gold)}
+  .stat.prog .n{color:var(--blue)}
+  .stat.crit .n{color:var(--red)}
+
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+  .search{flex:1;min-width:220px;position:relative}
+  .search input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 12px 9px 34px;color:var(--text);font-size:14px}
+  .search input:focus{outline:none;border-color:var(--gold)}
+  .search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted-2)}
+  select.filter{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;min-width:130px}
+  select.filter:focus{outline:none;border-color:var(--gold)}
+  .clear-f{color:var(--muted-2);font-size:12px;background:none;border:none;text-decoration:underline;text-underline-offset:2px}
+  .clear-f:hover{color:var(--text)}
+
+  .group-h{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.16em;color:var(--muted-2);margin:26px 0 12px;display:flex;align-items:center;gap:10px}
+  .group-h::after{content:'';flex:1;height:1px;background:var(--border-soft)}
+  .group-h:first-of-type{margin-top:0}
+
+  .card{background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--radius);padding:15px 16px;margin-bottom:10px;transition:border-color .12s}
+  .card:hover{border-color:var(--border)}
+  .card.done{opacity:.62}
+  .card.done .c-title{text-decoration:line-through;text-decoration-color:var(--muted-2)}
+  .c-top{display:flex;align-items:flex-start;gap:12px}
+  .c-check{flex-shrink:0;width:20px;height:20px;border:1.5px solid var(--muted-2);border-radius:6px;margin-top:2px;display:flex;align-items:center;justify-content:center;transition:all .12s;background:none;color:transparent}
+  .c-check:hover{border-color:var(--gold)}
+  .c-check.on{background:var(--green);border-color:var(--green);color:#14110d}
+  .c-body{flex:1;min-width:0}
+  .c-title{font-family:var(--disp);font-weight:600;font-size:15.5px;letter-spacing:-.005em}
+  .c-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px;align-items:center}
+  .c-detail{color:var(--muted);font-size:13.5px;margin-top:9px;white-space:pre-wrap}
+  .c-note{background:var(--surface-2);border-left:2px solid var(--gold);border-radius:0 6px 6px 0;padding:8px 11px;margin-top:10px;font-size:13px;color:var(--muted)}
+  .c-note b{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.1em;display:block;margin-bottom:3px;color:var(--gold);font-weight:500}
+  .c-foot{margin-top:10px;font-family:var(--mono);font-size:10px;color:var(--muted-2);letter-spacing:.03em}
+  .c-actions{display:flex;gap:4px;flex-shrink:0}
+  .icon-btn{background:none;border:none;color:var(--muted-2);padding:5px;border-radius:6px;display:flex;transition:all .12s}
+  .icon-btn:hover{color:var(--text);background:var(--surface-3)}
+  .icon-btn.del:hover{color:var(--red)}
+
+  .chip{font-family:var(--mono);font-size:10.5px;font-weight:500;padding:3px 8px;border-radius:6px;letter-spacing:.02em;white-space:nowrap;border:1px solid var(--border);background:var(--surface-2);color:var(--muted);display:inline-flex;align-items:center;gap:5px}
+  .chip.sys{color:var(--muted)}
+  .dot-i{width:6px;height:6px;border-radius:50%;display:inline-block;background:var(--muted-2)}
+  .dot-i.cx-Baixa{background:var(--green)}
+  .dot-i.cx-Média{background:var(--amber)}
+  .dot-i.cx-Alta{background:var(--red)}
+  .dot-i.pr-Baixa{background:var(--muted-2)}
+  .dot-i.pr-Média{background:var(--amber)}
+  .dot-i.pr-Alta{background:var(--red)}
+  .dot-i.pr-Crítica{background:var(--red)}
+  .chip.pr-Crítica{border-color:var(--red);color:var(--red)}
+  .chip.st-em_andamento{color:var(--blue)}
+  .chip-label{font-size:9.5px;color:var(--muted-2);text-transform:uppercase;letter-spacing:.1em}
+
+  .empty{text-align:center;padding:60px 20px;color:var(--muted-2)}
+  .empty .big{font-family:var(--disp);font-size:17px;color:var(--muted);margin-bottom:6px}
+
+  .overlay{position:fixed;inset:0;background:rgba(10,8,5,.7);z-index:100;display:none;align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto}
+  .overlay.on{display:flex}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;width:100%;max-width:600px;padding:24px}
+  .modal h2{font-family:var(--disp);font-size:19px;margin-bottom:2px}
+  .modal .sub{color:var(--muted-2);font-size:13px;margin-bottom:20px}
+  .field{margin-bottom:15px}
+  .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:500}
+  .field input,.field select,.field textarea{width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:9px 11px;color:var(--text);font-size:14px}
+  .field textarea{resize:vertical;min-height:64px;line-height:1.5}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--gold)}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:22px}
+
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface-3);border:1px solid var(--border);color:var(--text);padding:11px 18px;border-radius:9px;font-size:14px;z-index:200;opacity:0;transition:all .25s}
+  .toast.on{transform:translateX(-50%) translateY(0);opacity:1}
+
+  @media(max-width:640px){
+    .row2,.row3{grid-template-columns:1fr}
+    main{padding:16px}
+    .head-inner{padding:14px 16px}
+    #userBox .em{max-width:150px}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="head-inner">
+    <div class="brand">
+      <span class="dot"></span>
+      <div>
+        <h1>DDTank Server</h1>
+        <span>Bug &amp; Improvement Tracker</span>
+      </div>
+    </div>
+    <div class="head-actions">
+      <div id="userBox">
+        <span class="em" id="lastEdit"></span>
+        <span class="who-chip" id="whoChip"></span>
+        <button class="btn ghost sm" id="btnSwitch">Trocar</button>
+      </div>
+      <button class="btn ghost sm" id="btnTheme">Tema claro</button>
+      <button class="btn ghost sm needs-auth" id="btnImport">Importar</button>
+      <button class="btn ghost sm needs-auth" id="btnExport">Exportar</button>
+      <button class="btn primary needs-auth" id="btnAdd">+ Adicionar</button>
+    </div>
+  </div>
+</header>
+
+<div id="gate">
+  <div class="gate-card">
+    <div class="gdot"></div>
+    <h2>Quem está acessando?</h2>
+    <p>Escolha seu nome para registrar quem faz cada alteração no quadro.</p>
+    <div class="who">
+      <button class="btn who-b" data-name="Fabiano">Fabiano</button>
+      <button class="btn who-b" data-name="Marquinhos">Marquinhos</button>
+      <button class="btn who-b" data-name="Leo">Leo</button>
+      <button class="btn who-b" data-name="Paulo">Paulo</button>
+      <button class="btn who-b" data-name="__other">Outros</button>
+    </div>
+    <div id="otherWrap">
+      <input type="text" id="otherName" placeholder="Digite seu nome" maxlength="24">
+      <button class="btn primary" id="otherGo">Entrar</button>
+    </div>
+  </div>
+</div>
+
+<main>
+  <div class="tabs">
+    <button class="tab active" data-tab="bug">Bugs <span class="count" id="cnt-bug"></span></button>
+    <button class="tab" data-tab="melhoria">Melhorias <span class="count" id="cnt-melhoria"></span></button>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="toolbar">
+    <div class="search">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+      <input type="text" id="search" placeholder="Buscar por título, detalhe ou nota...">
+    </div>
+    <select class="filter" id="f-sys"><option value="">Todos os sistemas</option></select>
+    <select class="filter" id="f-cx">
+      <option value="">Complexidade</option>
+      <option>Baixa</option><option>Média</option><option>Alta</option>
+    </select>
+    <select class="filter" id="f-pr">
+      <option value="">Prioridade</option>
+      <option>Crítica</option><option>Alta</option><option>Média</option><option>Baixa</option>
+    </select>
+    <select class="filter" id="f-st">
+      <option value="">Status</option>
+      <option value="pendente">Pendente</option>
+      <option value="em_andamento">Em andamento</option>
+      <option value="concluido">Concluído</option>
+    </select>
+    <button class="clear-f" id="clearF">limpar filtros</button>
+  </div>
+
+  <div id="list"></div>
+</main>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h2 id="mTitle">Adicionar item</h2>
+    <div class="sub" id="mSub"></div>
+    <div class="field">
+      <label>Título</label>
+      <input type="text" id="m-titulo" placeholder="Descrição curta do item">
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Tipo</label>
+        <select id="m-tipo"><option value="bug">Bug</option><option value="melhoria">Melhoria</option></select>
+      </div>
+      <div class="field">
+        <label>Sistema</label>
+        <input type="text" id="m-sistema" list="sysList" placeholder="Ex: Instâncias">
+        <datalist id="sysList"></datalist>
+      </div>
+    </div>
+    <div class="row3">
+      <div class="field">
+        <label>Complexidade</label>
+        <select id="m-cx"><option>Baixa</option><option selected>Média</option><option>Alta</option></select>
+      </div>
+      <div class="field">
+        <label>Prioridade</label>
+        <select id="m-pr"><option>Baixa</option><option selected>Média</option><option>Alta</option><option>Crítica</option></select>
+      </div>
+      <div class="field">
+        <label>Status</label>
+        <select id="m-st"><option value="pendente">Pendente</option><option value="em_andamento">Em andamento</option><option value="concluido">Concluído</option></select>
+      </div>
+    </div>
+    <div class="field">
+      <label>Detalhes</label>
+      <textarea id="m-detalhes" placeholder="Descrição completa, sintomas, passos para reproduzir..."></textarea>
+    </div>
+    <div class="field">
+      <label>Nota técnica / plano</label>
+      <textarea id="m-notas" placeholder="Hipótese de causa, onde investigar, dependências..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="mCancel">Cancelar</button>
+      <button class="btn primary" id="mSave">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<input type="file" id="fileInput" accept="application/json" style="display:none">
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD_7X9PzyNa5JuuDTL-wVM0O7nPoLq_jZ4",
+  authDomain: "saturno-124b6.firebaseapp.com",
+  projectId: "saturno-124b6",
+  storageBucket: "saturno-124b6.firebasestorage.app",
+  messagingSenderId: "769076001591",
+  appId: "1:769076001591:web:1ed89c65cc4f5f74d538b2"
+};
+
+const app = initializeApp(firebaseConfig);
+const fs = getFirestore(app);
+const BOARD = doc(fs, 'boards', 'ddtank');
+
+/* ---- seed data (lista inicial + avaliação de complexidade/prioridade) ---- */
+const SEED = [
+  {tipo:'bug', titulo:'Instâncias do Pinto (fácil/normal/difícil) com estágios invertidos', sistema:'Instâncias', cx:'Média', pr:'Média', detalhes:'A lógica funciona, mas os estágios estão invertidos e a fase final está completamente diferente da versão antiga.', notas:'Corrigir a ordem dos estágios e comparar a fase final com o script da versão antiga para restaurar o comportamento esperado.'},
+  {tipo:'bug', titulo:'Bugou: 1º estágio pede 15 mortes, mas a contagem real é 25', sistema:'Instâncias', cx:'Baixa', pr:'Média', detalhes:'O objetivo exibido no primeiro estágio da instância Bugou pede 15 Bugous mortos, porém a contagem real necessária é 25.', notas:'Provável divergência entre o valor exibido do objetivo e o kill count real. Conferir o valor de meta no script/config da instância.'},
+  {tipo:'bug', titulo:'Bugou: o Barão não causa dano nos jogadores', sistema:'Instâncias', cx:'Média', pr:'Média', detalhes:'O boss Barão não dá dano nos jogadores, mesmo quando você pula em cima dele.', notas:'Verificar a lógica de colisão/dano do boss. Possível flag de dano desativada ou hitbox ausente.'},
+  {tipo:'bug', titulo:'Falas dos inimigos nas instâncias em chinês', sistema:'Localização', cx:'Baixa', pr:'Média', detalhes:'As falas dos inimigos dentro das instâncias aparecem em chinês.', notas:'Mapear todas as strings de NPCs/inimigos das instâncias e traduzir. Verificar tabela de idioma/banco. Cruzar esforço com o item das mensagens em vietnamita.'},
+  {tipo:'bug', titulo:'Instâncias não liberam o próximo nível de dificuldade', sistema:'Progressão', cx:'Média', pr:'Alta', detalhes:'Ao concluir uma dificuldade, a próxima não é liberada (ex: faço Bugou fácil e Bugou normal não abre).', notas:'PENDENTE DE VALIDAÇÃO (apenas 1 teste feito). Confirmar o comportamento com Bugou fácil→normal antes de aprofundar. Investigar a flag de desbloqueio / pré-requisito de dificuldade.'},
+  {tipo:'bug', titulo:'Algumas missões não funcionam e não completam', sistema:'Missões', cx:'Alta', pr:'Alta', detalhes:'Missões diversas não funcionam corretamente e não são concluídas.', notas:'Escopo ainda indefinido. Levantar a lista exata de missões afetadas antes de estimar. Provável falha nas condições de conclusão. Considerar quebrar em subtarefas por missão.'},
+  {tipo:'bug', titulo:'Super pedras antigas ainda no ferreiro e em recompensas de missão', sistema:'Itens', cx:'Média', pr:'Média', detalhes:'As super pedras antigas continuam disponíveis no ferreiro e são oferecidas por várias missões. Elas se comportam como uma pedra de fortalecimento nível 6, dando bem mais porcentagem que a nível 5.', notas:'Quebra o balanceamento. Remover do ferreiro e substituir as referências nas recompensas de missão por um item equivalente válido.'},
+  {tipo:'bug', titulo:'Ferreiro/Fortalecimento: porcentagens somem ao reabrir', sistema:'Ferreiro', cx:'Média', pr:'Média', detalhes:'A aba de fortalecimento deixa de exibir as porcentagens a partir da segunda vez que é aberta na mesma sessão.', notas:'A UI não re-inicializa os valores na reabertura. Verificar o reset/rebind de estado do painel no cliente.'},
+  {tipo:'bug', titulo:'Ferreiro/Fortalecimento: botões de pedra nível 4, símbolo dos deuses e amuleto não funcionam', sistema:'Ferreiro', cx:'Média', pr:'Alta', detalhes:'Na aba de fortalecimento, os botões de compra de pedra nível 4, símbolo dos deuses e amuleto não respondem.', notas:'Handlers de compra sem resposta. Verificar o bind dos botões no cliente e o pacote/handler correspondente no servidor.'},
+  {tipo:'bug', titulo:'Sem som de fortalecimento ou fracasso', sistema:'Áudio', cx:'Baixa', pr:'Baixa', detalhes:'O fortalecimento exibe apenas a imagem de sucesso/fracasso, sem tocar o som correspondente.', notas:'Verificar o trigger de áudio e se o asset de som está referenciado e carregado.'},
+  {tipo:'bug', titulo:'Labirinto do guerreiro não funciona', sistema:'Labirinto', cx:'Alta', pr:'Alta', detalhes:'O sistema do Labirinto do guerreiro está fora do ar / não funciona.', notas:'Sistema inteiro inoperante. Diagnosticar entrada e carregamento antes de estimar o esforço real de correção.'},
+  {tipo:'bug', titulo:'Terrenos de plantio originais da fazenda não aparecem', sistema:'Fazenda', cx:'Média', pr:'Média', detalhes:'Os terrenos de plantio padrão da fazenda não aparecem; só surgem se o jogador comprar terrenos.', notas:'Verificar a inicialização dos terrenos padrão para jogadores novos e existentes.'},
+  {tipo:'bug', titulo:'Calendário não registra login diário e exibe ano de 2013', sistema:'Calendário', cx:'Média', pr:'Média', detalhes:'O calendário não registra o login diário. Além disso, exibe visualmente o ano de 2013, embora o sistema registre corretamente 2026.', notas:'São duas frentes: (1) o ano exibido (2013) é bug visual, corrigir o render de data; (2) o check-in diário não é gravado, investigar a rotina de registro do login.'},
+  {tipo:'bug', titulo:'Mensagens exibidas em vietnamita', sistema:'Localização', cx:'Baixa', pr:'Média', detalhes:'Algumas mensagens do jogo aparecem em vietnamita.', notas:'Localizar todas as ocorrências para tradução. Mesmo esforço de i18n do item das falas em chinês; tratar em conjunto.'},
+  {tipo:'bug', titulo:'Escola não exibe alunos abaixo do nível 20', sistema:'Escola', cx:'Média', pr:'Média', detalhes:'A Escola não lista os alunos (jogadores abaixo do nível 20).', notas:'Provável filtro de query excluindo jogadores <nível 20. Verificar a consulta de listagem de alunos.'},
+  {tipo:'melhoria', titulo:'Nova aba "Oficina" no ferreiro (Espírito de luta, dourar equipamento, potência)', sistema:'Oficina', cx:'Alta', pr:'Média', detalhes:'Inserir os sistemas de Espírito de luta, dourar equipamento e potência dentro de uma nova aba no ferreiro. Manter a aba "Ferreiro" com os sistemas padrões e criar a aba "Oficina" com esses sistemas que hoje não têm botão. O Espírito da luta tem botão na mochila, que será removido.', notas:'Reorganização de UI + realocação de 3 sistemas + remoção do botão da mochila. Definir o layout das duas abas antes de codar.'},
+  {tipo:'melhoria', titulo:'Inserir sistema de Figura', sistema:'Figura', cx:'Alta', pr:'Baixa', detalhes:'Inserir o sistema de figura. Verificar a viabilidade de importar de versões superiores.', notas:'Levantar dependências (assets, tabelas, cliente) de uma versão superior antes de decidir pela portabilidade.'},
+  {tipo:'melhoria', titulo:'Eventos gacha com toggle de exibição e edição de recompensas', sistema:'Eventos', cx:'Alta', pr:'Média', detalhes:'Inserir eventos gacha desta versão ou superiores, com botão de aparecer/desaparecer no painel. Se possível, permitir editar as recompensas.', notas:'Escopo grande: painel de controle (exibir/ocultar) + edição de recompensas. Considerar dividir em subtarefas.'},
+  {tipo:'melhoria', titulo:'Imagens de preview nas abas de evento', sistema:'Eventos', cx:'Média', pr:'Baixa', detalhes:'Inserir imagens dentro das abas de evento para que o jogador visualize a recompensa antes de coletar, no lugar do texto de recompensa.', notas:'Substituir a descrição textual por imagem de preview. Depende do pipeline de assets.'},
+  {tipo:'melhoria', titulo:'Atualizar atividades diárias e recompensas', sistema:'Atividades Diárias', cx:'Média', pr:'Média', detalhes:'Atualizar as atividades diárias, assim como as recompensas.', notas:'Revisar a lista de atividades e a tabela de recompensas.'},
+  {tipo:'melhoria', titulo:'Sistema de rankings + concluir missões fora da aba de missões', sistema:'Rankings', cx:'Alta', pr:'Média', detalhes:'Inserir sistema de rankings e permitir completar missões fora da aba de missões, com um botão junto aos eventos limitados.', notas:'Dois pedidos combinados (rankings + atalho de conclusão de missões). Avaliar separar em duas tarefas.'}
+];
+
+/* ---- state ---- */
+let DB = [];
+let currentTab = 'bug';
+let editingId = null;
+let ready = false;
+let subscribed = false;
+let currentUser = null;
+let lastMeta = {by:null, at:null};
+const filters = {q:'', sys:'', cx:'', pr:'', st:''};
+
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const $ = s => document.querySelector(s);
+function esc(s){ return String(s??'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function relTime(ts){
+  if(!ts) return '';
+  const s = Math.floor((Date.now()-ts)/1000);
+  if (s < 60) return 'agora mesmo';
+  const m = Math.floor(s/60); if (m < 60) return `há ${m} min`;
+  const h = Math.floor(m/60); if (h < 24) return `há ${h}h`;
+  const d = Math.floor(h/24); return `há ${d}d`;
+}
+
+/* ---- identity ---- */
+function setUser(name){
+  currentUser = name;
+  try{ localStorage.setItem('ddtank_user', name); }catch(e){}
+  $('#whoChip').textContent = name;
+  document.body.classList.add('authed');
+  ensureSubscribed();
+}
+function switchUser(){
+  document.body.classList.remove('authed');
+  $('#otherWrap').style.display = 'none';
+}
+
+/* ---- Firestore ---- */
+async function saveDB(){
+  try{
+    await setDoc(BOARD, {items: DB, updatedAt: Date.now(), lastEditBy: currentUser || '—'});
+  }catch(e){ toast('Erro ao salvar: ' + (e.code || e.message)); }
+}
+
+function ensureSubscribed(){
+  if (subscribed) return;
+  subscribed = true;
+  onSnapshot(BOARD, async snap=>{
+    if (!snap.exists()){
+      DB = SEED.map(s => ({...s, id:uid(), status:'pendente', criadoEm:Date.now(), concluidoEm:null}));
+      await saveDB();
+      return;
+    }
+    const data = snap.data();
+    DB = Array.isArray(data.items) ? data.items : [];
+    lastMeta = {by: data.lastEditBy || null, at: data.updatedAt || null};
+    ready = true;
+    renderLastEdit();
+    buildSysOptions();
+    render();
+  }, err=>{
+    toast('Erro ao carregar: ' + (err.code || err.message));
+  });
+}
+
+function renderLastEdit(){
+  if (lastMeta.by){
+    $('#lastEdit').textContent = `Última alteração: ${lastMeta.by} · ${relTime(lastMeta.at)}`;
+  } else {
+    $('#lastEdit').textContent = '';
+  }
+}
+setInterval(renderLastEdit, 60000);
+
+/* ---- UI ---- */
+function buildSysOptions(){
+  const systems = [...new Set(DB.map(i=>i.sistema).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt'));
+  const fsys = $('#f-sys');
+  fsys.innerHTML = '<option value="">Todos os sistemas</option>' + systems.map(s=>`<option>${esc(s)}</option>`).join('');
+  fsys.value = filters.sys;
+  $('#sysList').innerHTML = systems.map(s=>`<option value="${esc(s)}">`).join('');
+}
+
+function matches(i){
+  if (i.tipo !== currentTab) return false;
+  if (filters.sys && i.sistema !== filters.sys) return false;
+  if (filters.cx && i.cx !== filters.cx) return false;
+  if (filters.pr && i.pr !== filters.pr) return false;
+  if (filters.st && i.status !== filters.st) return false;
+  if (filters.q){
+    const q = filters.q.toLowerCase();
+    const hay = (i.titulo+' '+i.detalhes+' '+i.notas+' '+i.sistema).toLowerCase();
+    if (!hay.includes(q)) return false;
+  }
+  return true;
+}
+
+function render(){
+  if (!ready) return;
+  $('#cnt-bug').textContent = DB.filter(i=>i.tipo==='bug' && i.status!=='concluido').length;
+  $('#cnt-melhoria').textContent = DB.filter(i=>i.tipo==='melhoria' && i.status!=='concluido').length;
+  renderStats();
+
+  const items = DB.filter(matches);
+  const active = items.filter(i=>i.status!=='concluido');
+  const done = items.filter(i=>i.status==='concluido');
+  const prOrder={'Crítica':0,'Alta':1,'Média':2,'Baixa':3};
+  active.sort((a,b)=> (prOrder[a.pr]-prOrder[b.pr]) || a.criadoEm-b.criadoEm);
+  done.sort((a,b)=> (b.concluidoEm||0)-(a.concluidoEm||0));
+
+  const list = $('#list');
+  if (!active.length && !done.length){
+    list.innerHTML = `<div class="empty"><div class="big">Nada por aqui</div><div>Nenhum ${currentTab==='bug'?'bug':'item de melhoria'} corresponde aos filtros atuais.</div></div>`;
+    return;
+  }
+  let html = '';
+  const label = currentTab==='bug' ? 'Bugs abertos' : 'Melhorias pendentes';
+  if (active.length || !done.length){
+    html += `<div class="group-h">${label} · ${active.length}</div>`;
+    html += active.map(cardHTML).join('') || `<div class="empty" style="padding:24px"><div>Tudo resolvido nesta lista.</div></div>`;
+  }
+  if (done.length){
+    html += `<div class="group-h">Concluídos · ${done.length}</div>`;
+    html += done.map(cardHTML).join('');
+  }
+  list.innerHTML = html;
+}
+
+function renderStats(){
+  const scope = DB.filter(i=>i.tipo===currentTab);
+  const pend = scope.filter(i=>i.status==='pendente').length;
+  const prog = scope.filter(i=>i.status==='em_andamento').length;
+  const done = scope.filter(i=>i.status==='concluido').length;
+  const crit = scope.filter(i=>i.status!=='concluido' && (i.pr==='Crítica'||i.pr==='Alta')).length;
+  $('#stats').innerHTML = `
+    <div class="stat"><div class="n">${scope.length}</div><div class="l">Total</div></div>
+    <div class="stat pend"><div class="n">${pend}</div><div class="l">Pendentes</div></div>
+    <div class="stat prog"><div class="n">${prog}</div><div class="l">Em andamento</div></div>
+    <div class="stat done"><div class="n">${done}</div><div class="l">Concluídos</div></div>
+    <div class="stat crit"><div class="n">${crit}</div><div class="l">Prioridade alta+</div></div>`;
+}
+
+function cardHTML(i){
+  const done = i.status==='concluido';
+  const stChip = i.status==='em_andamento' ? `<span class="chip st-em_andamento">em andamento</span>` : '';
+  const foot = i.editadoPor ? `<div class="c-foot">alterado por ${esc(i.editadoPor)}${i.editadoEm?` · ${relTime(i.editadoEm)}`:''}</div>` : '';
+  return `<div class="card ${done?'done':''}" data-id="${i.id}">
+    <div class="c-top">
+      <button class="c-check ${done?'on':''}" data-act="toggle" title="${done?'Reabrir':'Marcar como concluído'}">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+      </button>
+      <div class="c-body">
+        <div class="c-title">${esc(i.titulo)}</div>
+        <div class="c-meta">
+          <span class="chip sys">${esc(i.sistema||'—')}</span>
+          <span class="chip"><span class="dot-i cx-${i.cx}"></span><span class="chip-label">cx</span>${i.cx}</span>
+          <span class="chip pr-${i.pr}"><span class="dot-i pr-${i.pr}"></span><span class="chip-label">pr</span>${i.pr}</span>
+          ${stChip}
+        </div>
+        ${i.detalhes?`<div class="c-detail">${esc(i.detalhes)}</div>`:''}
+        ${i.notas?`<div class="c-note"><b>Nota técnica</b>${esc(i.notas)}</div>`:''}
+        ${foot}
+      </div>
+      <div class="c-actions">
+        <button class="icon-btn" data-act="edit" title="Editar">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>
+        </button>
+        <button class="icon-btn del" data-act="del" title="Excluir">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m2 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function stamp(i){ i.editadoPor = currentUser || '—'; i.editadoEm = Date.now(); }
+
+/* ---- events ---- */
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');
+  currentTab = t.dataset.tab;
+  render();
+});
+$('#search').oninput = e=>{ filters.q=e.target.value; render(); };
+$('#f-sys').onchange = e=>{ filters.sys=e.target.value; render(); };
+$('#f-cx').onchange = e=>{ filters.cx=e.target.value; render(); };
+$('#f-pr').onchange = e=>{ filters.pr=e.target.value; render(); };
+$('#f-st').onchange = e=>{ filters.st=e.target.value; render(); };
+$('#clearF').onclick = ()=>{
+  filters.q=filters.sys=filters.cx=filters.pr=filters.st='';
+  $('#search').value=''; $('#f-sys').value=''; $('#f-cx').value=''; $('#f-pr').value=''; $('#f-st').value='';
+  render();
+};
+
+$('#list').onclick = async e=>{
+  const btn = e.target.closest('[data-act]');
+  if (!btn) return;
+  const id = e.target.closest('.card').dataset.id;
+  const act = btn.dataset.act;
+  if (act==='toggle') await toggleDone(id);
+  else if (act==='edit') openModal(id);
+  else if (act==='del') await del(id);
+};
+
+$('#btnAdd').onclick = ()=>openModal(null);
+$('#mCancel').onclick = closeModal;
+$('#overlay').onclick = e=>{ if(e.target.id==='overlay') closeModal(); };
+$('#mSave').onclick = save;
+$('#btnExport').onclick = exportData;
+$('#btnImport').onclick = ()=>$('#fileInput').click();
+$('#fileInput').onchange = importData;
+$('#btnTheme').onclick = toggleTheme;
+$('#btnSwitch').onclick = switchUser;
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+
+document.querySelectorAll('.who-b').forEach(b=> b.onclick=()=>{
+  const n = b.dataset.name;
+  if (n === '__other'){ $('#otherWrap').style.display='flex'; $('#otherName').focus(); }
+  else setUser(n);
+});
+$('#otherGo').onclick = ()=>{ const v=$('#otherName').value.trim(); if(v) setUser(v); else $('#otherName').focus(); };
+$('#otherName').addEventListener('keydown', e=>{ if(e.key==='Enter'){ const v=e.target.value.trim(); if(v) setUser(v); } });
+
+async function toggleDone(id){
+  const i = DB.find(x=>x.id===id); if(!i) return;
+  if (i.status==='concluido'){ i.status='pendente'; i.concluidoEm=null; }
+  else { i.status='concluido'; i.concluidoEm=Date.now(); }
+  stamp(i);
+  render(); await saveDB();
+  toast(i.status==='concluido'?'Movido para concluídos':'Reaberto');
+}
+
+async function del(id){
+  const i = DB.find(x=>x.id===id); if(!i) return;
+  if (!confirm(`Excluir "${i.titulo}"?`)) return;
+  DB = DB.filter(x=>x.id!==id);
+  buildSysOptions(); render(); await saveDB();
+  toast('Item excluído');
+}
+
+function openModal(id){
+  editingId = id;
+  const i = id ? DB.find(x=>x.id===id) : null;
+  $('#mTitle').textContent = id ? 'Editar item' : 'Adicionar item';
+  $('#mSub').textContent = id ? '' : 'Preencha os campos abaixo.';
+  $('#m-titulo').value = i?i.titulo:'';
+  $('#m-tipo').value = i?i.tipo:currentTab;
+  $('#m-sistema').value = i?i.sistema:'';
+  $('#m-cx').value = i?i.cx:'Média';
+  $('#m-pr').value = i?i.pr:'Média';
+  $('#m-st').value = i?i.status:'pendente';
+  $('#m-detalhes').value = i?i.detalhes:'';
+  $('#m-notas').value = i?i.notas:'';
+  $('#overlay').classList.add('on');
+  setTimeout(()=>$('#m-titulo').focus(),50);
+}
+function closeModal(){ $('#overlay').classList.remove('on'); editingId=null; }
+
+async function save(){
+  const titulo = $('#m-titulo').value.trim();
+  if (!titulo){ $('#m-titulo').focus(); toast('Informe um título'); return; }
+  const data = {
+    titulo,
+    tipo: $('#m-tipo').value,
+    sistema: $('#m-sistema').value.trim() || '—',
+    cx: $('#m-cx').value,
+    pr: $('#m-pr').value,
+    status: $('#m-st').value,
+    detalhes: $('#m-detalhes').value.trim(),
+    notas: $('#m-notas').value.trim()
+  };
+  if (editingId){
+    const i = DB.find(x=>x.id===editingId);
+    const wasDone = i.status==='concluido';
+    Object.assign(i, data);
+    if (data.status==='concluido' && !wasDone) i.concluidoEm=Date.now();
+    if (data.status!=='concluido') i.concluidoEm=null;
+    stamp(i);
+  } else {
+    const novo = {...data, id:uid(), criadoEm:Date.now(), concluidoEm: data.status==='concluido'?Date.now():null};
+    stamp(novo);
+    DB.push(novo);
+    currentTab = data.tipo;
+    document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active', x.dataset.tab===currentTab));
+  }
+  buildSysOptions(); render(); closeModal(); await saveDB();
+  toast(editingId?'Item atualizado':'Item adicionado');
+}
+
+/* ---- export / import ---- */
+function exportData(){
+  const blob = new Blob([JSON.stringify(DB,null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  const d = new Date();
+  a.download = `ddtank-tracker-${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}.json`;
+  a.click(); URL.revokeObjectURL(a.href);
+  toast('Backup exportado');
+}
+function importData(e){
+  const file = e.target.files[0]; if(!file) return;
+  const r = new FileReader();
+  r.onload = async ()=>{
+    try{
+      const data = JSON.parse(r.result);
+      if (!Array.isArray(data)) throw 0;
+      if (!confirm(`Importar ${data.length} itens? Isso substitui a lista atual (no Firestore, para todos).`)) return;
+      DB = data.map(x=>({id:x.id||uid(), tipo:x.tipo||'bug', titulo:x.titulo||'(sem título)', sistema:x.sistema||'—', cx:x.cx||'Média', pr:x.pr||'Média', status:x.status||'pendente', detalhes:x.detalhes||'', notas:x.notas||'', criadoEm:x.criadoEm||Date.now(), concluidoEm:x.concluidoEm||null, editadoPor:x.editadoPor||null, editadoEm:x.editadoEm||null}));
+      buildSysOptions(); render(); await saveDB();
+      toast('Lista importada');
+    }catch(err){ toast('Arquivo inválido'); }
+    e.target.value='';
+  };
+  r.readAsText(file);
+}
+
+/* ---- theme ---- */
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme', t);
+  const btn = $('#btnTheme');
+  if (btn) btn.textContent = t==='light' ? 'Tema escuro' : 'Tema claro';
+}
+function toggleTheme(){
+  const next = document.documentElement.getAttribute('data-theme')==='light' ? 'dark' : 'light';
+  applyTheme(next);
+  try{ localStorage.setItem('ddtank_theme', next); }catch(e){}
+}
+
+let toastT;
+function toast(msg){
+  const el = $('#toast'); el.textContent=msg; el.classList.add('on');
+  clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('on'),2200);
+}
+
+/* ---- init ---- */
+let savedTheme = 'dark';
+try{ savedTheme = localStorage.getItem('ddtank_theme')==='light' ? 'light' : 'dark'; }catch(e){}
+applyTheme(savedTheme);
+
+let savedUser = null;
+try{ savedUser = localStorage.getItem('ddtank_user'); }catch(e){}
+if (savedUser) setUser(savedUser);
+</script>
+</body>
+</html>
