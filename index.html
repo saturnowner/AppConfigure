@@ -335,7 +335,7 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const fs = getFirestore(app);
+const fs = getFirestore(app, "projeto-ddtank");
 const BOARD = doc(fs, 'boards', 'ddtank');
 
 /* ---- seed data (lista inicial + avaliação de complexidade/prioridade) ---- */
