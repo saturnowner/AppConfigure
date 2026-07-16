@@ -80,23 +80,26 @@
 
   .needs-auth{display:none!important}
   body.authed .needs-auth{display:inline-flex!important}
-  #userBox{display:none;align-items:center;gap:8px}
+  #userBox{display:none;align-items:center;gap:10px}
   body.authed #userBox{display:flex}
-  #userBox .em{font-family:var(--mono);font-size:11px;color:var(--muted-2);max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #userBox .em{font-family:var(--mono);font-size:11px;color:var(--muted-2);max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .who-chip{font-family:var(--mono);font-size:11px;color:var(--gold);border:1px solid var(--border);background:var(--surface-2);padding:3px 10px;border-radius:20px;white-space:nowrap}
 
   main{max-width:1180px;margin:0 auto;padding:24px;display:none}
   body.authed main{display:block}
 
-  /* login gate */
   #gate{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--bg)}
   body.authed #gate{display:none}
-  .gate-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:36px 32px;max-width:400px;width:100%;text-align:center}
+  .gate-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:36px 32px;max-width:420px;width:100%;text-align:center}
   .gate-card .gdot{width:11px;height:11px;border-radius:50%;background:var(--gold);margin:0 auto 18px}
-  .gate-card h2{font-family:var(--disp);font-size:21px;margin-bottom:8px}
+  .gate-card h2{font-family:var(--disp);font-size:22px;margin-bottom:8px}
   .gate-card p{color:var(--muted);font-size:14px;margin-bottom:24px;line-height:1.55}
-  .g-google{width:100%;justify-content:center;padding:11px}
-  .gate-msg{margin-top:18px;font-size:13px;color:var(--red);min-height:16px;line-height:1.5}
-  .gate-msg.info{color:var(--muted)}
+  .who{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .who-b{justify-content:center;padding:13px}
+  .who-b[data-name="__other"]{grid-column:1 / -1;color:var(--muted)}
+  #otherWrap{display:none;gap:8px;margin-top:10px}
+  #otherWrap input{flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:14px}
+  #otherWrap input:focus{outline:none;border-color:var(--gold)}
 
   .tabs{display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--border)}
   .tab{background:none;border:none;color:var(--muted);padding:12px 20px;font-family:var(--disp);font-weight:600;font-size:15px;position:relative;transition:color .12s}
@@ -142,6 +145,7 @@
   .c-detail{color:var(--muted);font-size:13.5px;margin-top:9px;white-space:pre-wrap}
   .c-note{background:var(--surface-2);border-left:2px solid var(--gold);border-radius:0 6px 6px 0;padding:8px 11px;margin-top:10px;font-size:13px;color:var(--muted)}
   .c-note b{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.1em;display:block;margin-bottom:3px;color:var(--gold);font-weight:500}
+  .c-foot{margin-top:10px;font-family:var(--mono);font-size:10px;color:var(--muted-2);letter-spacing:.03em}
   .c-actions{display:flex;gap:4px;flex-shrink:0}
   .icon-btn{background:none;border:none;color:var(--muted-2);padding:5px;border-radius:6px;display:flex;transition:all .12s}
   .icon-btn:hover{color:var(--text);background:var(--surface-3)}
@@ -185,6 +189,7 @@
     .row2,.row3{grid-template-columns:1fr}
     main{padding:16px}
     .head-inner{padding:14px 16px}
+    #userBox .em{max-width:150px}
   }
 </style>
 </head>
@@ -199,7 +204,11 @@
       </div>
     </div>
     <div class="head-actions">
-      <div id="userBox"><span class="em" id="userEmail"></span><button class="btn ghost sm" id="btnLogout">Sair</button></div>
+      <div id="userBox">
+        <span class="em" id="lastEdit"></span>
+        <span class="who-chip" id="whoChip"></span>
+        <button class="btn ghost sm" id="btnSwitch">Trocar</button>
+      </div>
       <button class="btn ghost sm" id="btnTheme">Tema claro</button>
       <button class="btn ghost sm needs-auth" id="btnImport">Importar</button>
       <button class="btn ghost sm needs-auth" id="btnExport">Exportar</button>
@@ -211,10 +220,19 @@
 <div id="gate">
   <div class="gate-card">
     <div class="gdot"></div>
-    <h2>DDTank Server Tracker</h2>
-    <p>Entre com sua conta Google autorizada para acessar o quadro de bugs e melhorias do servidor.</p>
-    <button class="btn primary g-google" id="btnLogin">Entrar com Google</button>
-    <div class="gate-msg" id="gateMsg"></div>
+    <h2>Quem está acessando?</h2>
+    <p>Escolha seu nome para registrar quem faz cada alteração no quadro.</p>
+    <div class="who">
+      <button class="btn who-b" data-name="Fabiano">Fabiano</button>
+      <button class="btn who-b" data-name="Marquinhos">Marquinhos</button>
+      <button class="btn who-b" data-name="Leo">Leo</button>
+      <button class="btn who-b" data-name="Paulo">Paulo</button>
+      <button class="btn who-b" data-name="__other">Outros</button>
+    </div>
+    <div id="otherWrap">
+      <input type="text" id="otherName" placeholder="Digite seu nome" maxlength="24">
+      <button class="btn primary" id="otherGo">Entrar</button>
+    </div>
   </div>
 </div>
 
@@ -305,7 +323,6 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -318,9 +335,7 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
 const fs = getFirestore(app);
-const provider = new GoogleAuthProvider();
 const BOARD = doc(fs, 'boards', 'ddtank');
 
 /* ---- seed data (lista inicial + avaliação de complexidade/prioridade) ---- */
@@ -352,53 +367,74 @@ const SEED = [
 let DB = [];
 let currentTab = 'bug';
 let editingId = null;
-let unsub = null;
 let ready = false;
+let subscribed = false;
+let currentUser = null;
+let lastMeta = {by:null, at:null};
 const filters = {q:'', sys:'', cx:'', pr:'', st:''};
 
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
 const $ = s => document.querySelector(s);
 function esc(s){ return String(s??'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
-/* ---- Firestore persistence ---- */
-async function saveDB(){
-  try{ await setDoc(BOARD, {items: DB, updatedAt: Date.now()}); }
-  catch(e){ toast('Erro ao salvar: ' + (e.code || e.message)); }
+function relTime(ts){
+  if(!ts) return '';
+  const s = Math.floor((Date.now()-ts)/1000);
+  if (s < 60) return 'agora mesmo';
+  const m = Math.floor(s/60); if (m < 60) return `há ${m} min`;
+  const h = Math.floor(m/60); if (h < 24) return `há ${h}h`;
+  const d = Math.floor(h/24); return `há ${d}d`;
 }
 
-function startSync(user){
-  gateMsg('Verificando acesso...', true);
-  if (unsub){ unsub(); unsub=null; }
-  unsub = onSnapshot(BOARD, async snap=>{
-    document.body.classList.add('authed');
-    gateMsg('');
+/* ---- identity ---- */
+function setUser(name){
+  currentUser = name;
+  try{ localStorage.setItem('ddtank_user', name); }catch(e){}
+  $('#whoChip').textContent = name;
+  document.body.classList.add('authed');
+  ensureSubscribed();
+}
+function switchUser(){
+  document.body.classList.remove('authed');
+  $('#otherWrap').style.display = 'none';
+}
+
+/* ---- Firestore ---- */
+async function saveDB(){
+  try{
+    await setDoc(BOARD, {items: DB, updatedAt: Date.now(), lastEditBy: currentUser || '—'});
+  }catch(e){ toast('Erro ao salvar: ' + (e.code || e.message)); }
+}
+
+function ensureSubscribed(){
+  if (subscribed) return;
+  subscribed = true;
+  onSnapshot(BOARD, async snap=>{
     if (!snap.exists()){
       DB = SEED.map(s => ({...s, id:uid(), status:'pendente', criadoEm:Date.now(), concluidoEm:null}));
       await saveDB();
-    } else {
-      const data = snap.data();
-      DB = Array.isArray(data.items) ? data.items : [];
+      return;
     }
+    const data = snap.data();
+    DB = Array.isArray(data.items) ? data.items : [];
+    lastMeta = {by: data.lastEditBy || null, at: data.updatedAt || null};
     ready = true;
-    buildSysOptions(); render();
+    renderLastEdit();
+    buildSysOptions();
+    render();
   }, err=>{
-    document.body.classList.remove('authed');
-    gateMsg('A conta ' + user.email + ' não tem acesso a este quadro. Adicione o e-mail nas regras do Firestore ou entre com outra conta.');
+    toast('Erro ao carregar: ' + (err.code || err.message));
   });
 }
 
-/* ---- auth ---- */
-onAuthStateChanged(auth, user=>{
-  if (!user){
-    if (unsub){ unsub(); unsub=null; }
-    document.body.classList.remove('authed');
-    ready = false;
-    gateMsg('');
-    return;
+function renderLastEdit(){
+  if (lastMeta.by){
+    $('#lastEdit').textContent = `Última alteração: ${lastMeta.by} · ${relTime(lastMeta.at)}`;
+  } else {
+    $('#lastEdit').textContent = '';
   }
-  $('#userEmail').textContent = user.email;
-  startSync(user);
-});
+}
+setInterval(renderLastEdit, 60000);
 
 /* ---- UI ---- */
 function buildSysOptions(){
@@ -471,6 +507,7 @@ function renderStats(){
 function cardHTML(i){
   const done = i.status==='concluido';
   const stChip = i.status==='em_andamento' ? `<span class="chip st-em_andamento">em andamento</span>` : '';
+  const foot = i.editadoPor ? `<div class="c-foot">alterado por ${esc(i.editadoPor)}${i.editadoEm?` · ${relTime(i.editadoEm)}`:''}</div>` : '';
   return `<div class="card ${done?'done':''}" data-id="${i.id}">
     <div class="c-top">
       <button class="c-check ${done?'on':''}" data-act="toggle" title="${done?'Reabrir':'Marcar como concluído'}">
@@ -486,6 +523,7 @@ function cardHTML(i){
         </div>
         ${i.detalhes?`<div class="c-detail">${esc(i.detalhes)}</div>`:''}
         ${i.notas?`<div class="c-note"><b>Nota técnica</b>${esc(i.notas)}</div>`:''}
+        ${foot}
       </div>
       <div class="c-actions">
         <button class="icon-btn" data-act="edit" title="Editar">
@@ -498,6 +536,8 @@ function cardHTML(i){
     </div>
   </div>`;
 }
+
+function stamp(i){ i.editadoPor = currentUser || '—'; i.editadoEm = Date.now(); }
 
 /* ---- events ---- */
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
@@ -535,24 +575,22 @@ $('#btnExport').onclick = exportData;
 $('#btnImport').onclick = ()=>$('#fileInput').click();
 $('#fileInput').onchange = importData;
 $('#btnTheme').onclick = toggleTheme;
-$('#btnLogin').onclick = doLogin;
-$('#btnLogout').onclick = ()=> signOut(auth);
+$('#btnSwitch').onclick = switchUser;
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
 
-async function doLogin(){
-  gateMsg('');
-  try{ await signInWithPopup(auth, provider); }
-  catch(e){
-    if (e.code === 'auth/popup-blocked') gateMsg('O navegador bloqueou o popup de login. Libere popups para este site e tente de novo.');
-    else if (e.code === 'auth/popup-closed-by-user') gateMsg('');
-    else gateMsg('Não foi possível entrar: ' + (e.code || e.message));
-  }
-}
+document.querySelectorAll('.who-b').forEach(b=> b.onclick=()=>{
+  const n = b.dataset.name;
+  if (n === '__other'){ $('#otherWrap').style.display='flex'; $('#otherName').focus(); }
+  else setUser(n);
+});
+$('#otherGo').onclick = ()=>{ const v=$('#otherName').value.trim(); if(v) setUser(v); else $('#otherName').focus(); };
+$('#otherName').addEventListener('keydown', e=>{ if(e.key==='Enter'){ const v=e.target.value.trim(); if(v) setUser(v); } });
 
 async function toggleDone(id){
   const i = DB.find(x=>x.id===id); if(!i) return;
   if (i.status==='concluido'){ i.status='pendente'; i.concluidoEm=null; }
   else { i.status='concluido'; i.concluidoEm=Date.now(); }
+  stamp(i);
   render(); await saveDB();
   toast(i.status==='concluido'?'Movido para concluídos':'Reaberto');
 }
@@ -602,8 +640,11 @@ async function save(){
     Object.assign(i, data);
     if (data.status==='concluido' && !wasDone) i.concluidoEm=Date.now();
     if (data.status!=='concluido') i.concluidoEm=null;
+    stamp(i);
   } else {
-    DB.push({...data, id:uid(), criadoEm:Date.now(), concluidoEm: data.status==='concluido'?Date.now():null});
+    const novo = {...data, id:uid(), criadoEm:Date.now(), concluidoEm: data.status==='concluido'?Date.now():null};
+    stamp(novo);
+    DB.push(novo);
     currentTab = data.tipo;
     document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active', x.dataset.tab===currentTab));
   }
@@ -628,8 +669,8 @@ function importData(e){
     try{
       const data = JSON.parse(r.result);
       if (!Array.isArray(data)) throw 0;
-      if (!confirm(`Importar ${data.length} itens? Isso substitui a lista atual (no Firestore).`)) return;
-      DB = data.map(x=>({id:x.id||uid(), tipo:x.tipo||'bug', titulo:x.titulo||'(sem título)', sistema:x.sistema||'—', cx:x.cx||'Média', pr:x.pr||'Média', status:x.status||'pendente', detalhes:x.detalhes||'', notas:x.notas||'', criadoEm:x.criadoEm||Date.now(), concluidoEm:x.concluidoEm||null}));
+      if (!confirm(`Importar ${data.length} itens? Isso substitui a lista atual (no Firestore, para todos).`)) return;
+      DB = data.map(x=>({id:x.id||uid(), tipo:x.tipo||'bug', titulo:x.titulo||'(sem título)', sistema:x.sistema||'—', cx:x.cx||'Média', pr:x.pr||'Média', status:x.status||'pendente', detalhes:x.detalhes||'', notas:x.notas||'', criadoEm:x.criadoEm||Date.now(), concluidoEm:x.concluidoEm||null, editadoPor:x.editadoPor||null, editadoEm:x.editadoEm||null}));
       buildSysOptions(); render(); await saveDB();
       toast('Lista importada');
     }catch(err){ toast('Arquivo inválido'); }
@@ -649,11 +690,6 @@ function toggleTheme(){
   applyTheme(next);
   try{ localStorage.setItem('ddtank_theme', next); }catch(e){}
 }
-function gateMsg(msg, info){
-  const el = $('#gateMsg');
-  el.textContent = msg || '';
-  el.classList.toggle('info', !!info);
-}
 
 let toastT;
 function toast(msg){
@@ -665,6 +701,10 @@ function toast(msg){
 let savedTheme = 'dark';
 try{ savedTheme = localStorage.getItem('ddtank_theme')==='light' ? 'light' : 'dark'; }catch(e){}
 applyTheme(savedTheme);
+
+let savedUser = null;
+try{ savedUser = localStorage.getItem('ddtank_user'); }catch(e){}
+if (savedUser) setUser(savedUser);
 </script>
 </body>
 </html>
